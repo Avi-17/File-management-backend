@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  UserID       String    @id @default(uuid()) @map("UserID") @db.Char(36)
+  Username     String    @unique
+  PasswordHash String
+
+  UserAccesses  UserAccess[]
+  AccessVerifications AccessVerification[]
+  AccessResults AccessResult[]
+}
+
+model File {
+  FileID   String     @id @default(uuid()) @map("FileID") @db.Char(36)
+  FileName String
+  FilePath String
+
+  UserAccesses UserAccess[]
+  AccessResults AccessResult[]
+}
+
+model AccessLevel {
+  AccessLevelID String     @id @default(uuid()) @map("AccessLevelID") @db.Char(36)
+  LevelName     String     @unique
+
+  UserAccesses  UserAccess[]
+}
+
+model UserAccess {
+  UserAccessID  String       @id @default(uuid()) @map("UserAccessID") @db.Char(36)
+  UserID        String
+  FileID        String
+  AccessLevelID String
+
+  User          User         @relation(fields: [UserID], references: [UserID])
+  File          File         @relation(fields: [FileID], references: [FileID])
+  AccessLevel   AccessLevel  @relation(fields: [AccessLevelID], references: [AccessLevelID])
+}
+
+model AccessVerification {
+  AccessVerificationID String @id @default(uuid()) @map("AccessVerificationID") @db.Char(36)
+  UserID               String
+  AuthStatus           String
+  AuthToken            String
+
+  User                 User @relation(fields: [UserID], references: [UserID])
+}
+
+model AccessResult {
+  AccessResultID String @id @default(uuid()) @map("AccessResultID") @db.Char(36)
+  UserID         String
+  FileID         String
+  AccessGranted  Boolean
+
+  User           User @relation(fields: [UserID], references: [UserID])
+  File           File @relation(fields: [FileID], references: [FileID])
+}
