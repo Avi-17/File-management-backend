@@ -1,50 +1,101 @@
-const prisma = require('../config/db');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const bucket = require("../config/firebase-config")
 
-const getFiles = async (req, res) => {
-  const files = await prisma.file.findMany({
-    where: { userAccess: { some: { userId: req.userId } } },
-  });
-  res.json(files);
-};
 
-const uploadFile = async (req, res) => {
-  const { fileName, filePath, accessLevelId } = req.body;
+//create a file
+exports.createFile = async (req, res) => {
+  const { fileName, content } = req.body;
+  const userId = req.userId;
 
-  // Validate access level
-  const accessLevel = await prisma.accessLevel.findUnique({
-    where: { id: accessLevelId },
-  });
-
-  if (!accessLevel) {
-    return res.status(400).json({ message: 'Invalid access level ID.' });
+  if(!fileName){
+    return res.status(400).json({error: "File name is required."})
   }
 
-  // Create the file and associate with user access and access level
-  await prisma.file.create({
-    data: {
-      fileName,
-      filePath,
-      userAccess: {
-        create: {
-          userId: req.userId,         // User ID from token
-          accessLevelId: accessLevelId // Valid access level
-        },
+  try {
+    const file = bucket.file(fileName);
+    await file.save(content, {contentType: 'text/plain'});
+
+    const fileUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
+
+    const fileRecord = await prisma.file.create({
+      data: {
+        fileName,
+        filePath: fileUrl,
+        ownerId: userId,
       },
-    },
-  });
-
-  res.status(201).json({ message: 'File uploaded successfully' });
+    });
+    res.status(201).json(fileRecord);
+  } catch (error) {
+    console.error("Error creating file:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 };
 
-const deleteFileById = async (req, res) => {
-  const { fileId } = req.params;
-  await prisma.file.delete({ where: { id: fileId } });
-  res.status(200).json({ message: 'File deleted successfully' });
-};
+//retrieve a file by id
+exports.getFileById = async(req, res) => {
+  const id = parseInt(req.params.id, 10);
 
-const getAccessLevels = async (req, res) => {
-  const accessLevels = await prisma.accessLevel.findMany();
-  res.json(accessLevels);
-};
+  if(!id){
+    return res.status(400).json({error: "File id required"})
+  }
 
-module.exports = { getFiles, uploadFile, deleteFileById, getAccessLevels };
+  try{
+    const exists = await prisma.file.findUnique({
+      where: {id: id}
+    })
+
+    if(!exists){
+      return res.status(404).json({error: "File not found"})
+    }
+
+    return res.status(200).json(exists)
+  } catch(err){
+    return res.status(500).json({error : "Internal Server Error"})
+  }
+}
+
+
+//retrieve all files
+exports.getAllFiles = async(req, res) => {
+  try{
+    const all = await prisma.file.findMany();
+    return res.status(200).json({"Files":all})
+  } catch(err){
+    return res.status(500).json({error: "Internal Server Error"})
+  }
+  
+}
+
+
+//delete file by id
+exports.deleteFileById = async(req, res) => {
+  const id = parseInt(req.params.id, 10)
+
+  if(!id){
+    return res.status(400).json({error: "File id is required"})
+  }
+
+  try{
+    const exists = await prisma.file.findUnique({
+      where: {id: id}
+    })
+
+    if(!exists){
+      return res.status(404).json({error: "File not found"});
+    }
+
+    const file = bucket.file(exists.fileName)
+    await file.delete();
+
+    const deleted = await prisma.file.delete({
+      where: {id: id}
+    })
+    return res.status(200).json({message: `File with id ${id} deleted successfully`})
+
+  } catch(err){
+    return res.status(500).json({error: "Internal Server Error"})
+  }
+}
+
+

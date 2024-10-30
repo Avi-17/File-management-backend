@@ -1,28 +1,54 @@
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const prisma = require('../config/db');
+const jwt = require('jsonwebtoken');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const JWT_SECRET = process.env.JWT_SECRET;
 
-const login = async (req, res) => {
-  const { username, password } = req.body;
-  const user = await prisma.user.findUnique({ where: { username } });
+exports.signup = async (req, res) => {
+  const { email, password } = req.body;
 
-  if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
-    return res.status(401).json({ message: 'Invalid credentials' });
+  try {
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser){
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: { email, password: hashedPassword },
+    });
+
+    res.status(201).json({ message: "User created", userId: user.id });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+exports.login = async (req, res) => {
+  const { email, password } = req.body;
+
+  if(!email){
+    return res.status(400).json({error: "Required field email is missing"})
   }
 
-  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-  res.json({ token });
+  if(!password){
+    return res.status(400).json({error: "Required field password is missing"})
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user){
+      return res.status(400).json({ message: "Invalid credentials" });
+    } 
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch){
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "1h" });
+    res.status(200).json({ token });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 };
-
-const signup = async (req, res) => {
-  const { username, password } = req.body;
-  const passwordHash = bcrypt.hashSync(password, 8);
-
-  await prisma.user.create({
-    data: { username, passwordHash },
-  });
-
-  res.status(201).json({ message: 'User created successfully' });
-};
-
-module.exports = { login, signup };
