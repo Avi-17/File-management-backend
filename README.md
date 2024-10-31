@@ -1,5 +1,3 @@
-# FILE MANAGEMENT SYSTEM
-
 This repo contains the source code for a file management system. This app allows user to retrieve and read the file content.
 
 ## TECH STACK
@@ -52,7 +50,13 @@ Make sure you have following installed
     
     ```jsx
     JWT_SECRET
-    DATABASE_URL
+    FIREBASE_ADMIN_SDK (base64 encoded Google Cloud Secrets)
+    DATABASE_URL (to connect with db)
+    DB_HOST
+    DB_PORT
+    DB_USER
+    DB_PASSWORD
+    DB_NAME
     ```
     
     After this, if you want you can also set up google cloud storage
@@ -75,7 +79,7 @@ can also use nodemon
 
 ## DATABASE
 
-For the file metadata, mySQL is used. File creation, storage and deletion is done in google cloud storage. Both are in sync i.e. if a file is created or deleted, it is reflected both in mySQL as well as in cloud storage.
+For the file metadata, aws cloud storage is used. File creation, storage and deletion is done in google cloud storage. Both are in sync i.e. if a file is created or deleted, it is reflected both in mySQL as well as in cloud storage.
 
 ## API ENDPOINTS
 
