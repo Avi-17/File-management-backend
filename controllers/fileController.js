@@ -69,33 +69,45 @@ exports.getAllFiles = async(req, res) => {
 
 
 //delete file by id
-exports.deleteFileById = async(req, res) => {
-  const id = parseInt(req.params.id, 10)
+exports.deleteFileById = async (req, res) => {
+  const id = parseInt(req.params.id, 10);
 
-  if(!id){
-    return res.status(400).json({error: "File id is required"})
+  if (!id) {
+    return res.status(400).json({ error: "File id is required" });
   }
 
-  try{
+  try {
     const exists = await prisma.file.findUnique({
-      where: {id: id}
-    })
+      where: { id: id },
+    });
 
-    if(!exists){
-      return res.status(404).json({error: "File not found"});
+    if (!exists) {
+      return res.status(404).json({ error: "File not found in database" });
     }
 
-    const file = bucket.file(exists.fileName)
-    await file.delete();
+    const file = bucket.file(exists.fileName);
+
+    try {
+      await file.delete();
+    } catch (storageError) {
+      if (storageError.code === 404) {
+        return res.status(404).json({ error: "File not found in cloud storage" });
+      } else {
+        console.error(storageError);
+        return res.status(500).json({ error: "Error deleting file from cloud storage" });
+      }
+    }
 
     const deleted = await prisma.file.delete({
-      where: {id: id}
-    })
-    return res.status(200).json({message: `File with id ${id} deleted successfully`})
+      where: { id: id },
+    });
+    return res.status(200).json({ message: `File with id ${id} deleted successfully` });
 
-  } catch(err){
-    return res.status(500).json({error: "Internal Server Error"})
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
-}
+};
+
 
 
