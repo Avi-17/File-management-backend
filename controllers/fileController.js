@@ -1,6 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const bucket = require("../config/firebase-config")
+const bucket = require("../config/firebase-config");
 
 
 //create a file
