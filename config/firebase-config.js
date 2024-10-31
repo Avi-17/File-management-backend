@@ -1,6 +1,7 @@
-var admin = require("firebase-admin");
+require("dotenv").config();
+const admin = require("firebase-admin");
 
-var serviceAccount = require("./tasknest-backend-firebase-adminsdk.json");
+const serviceAccount = JSON.parse(Buffer.from(process.env.FIREBASE_ADMIN_SDK, 'base64').toString('utf-8'));
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
