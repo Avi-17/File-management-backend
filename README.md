@@ -92,6 +92,9 @@ For the file metadata, mySQL is used. File creation, storage and deletion is don
 - **METHOD: DELETE**
     - /api/files/:id : pass id in url, deletes the file from id.
 
+- **METHOD: PUT**
+    - /api/files/:id : pass id in url and content in req body in json format. Updates (overwrites) the file Content.
+
 ## Middlewares
 
 ### authMiddleware

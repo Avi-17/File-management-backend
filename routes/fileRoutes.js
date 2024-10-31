@@ -14,6 +14,6 @@ router.delete('/files/:id', authMiddleware, deleteFileById);
 
 //to perform read, write, update operations on the files
 router.get('/files/:id/read', authMiddleware, readAFile);
-// router.put('/files/:id', authMiddleware, updateFile)
+router.put('/files/:id', authMiddleware, updateFile)
 
 module.exports = router;
