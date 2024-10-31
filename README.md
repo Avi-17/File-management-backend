@@ -50,7 +50,7 @@ Make sure you have following installed
     
     ```jsx
     JWT_SECRET
-    FIREBASE_ADMIN_SDK (base64 encoded Google Cloud Secrets)
+    FIREBASE_ADMIN_SDK (base64 encoded string Google Cloud Secrets)
     DATABASE_URL (to connect with db)
     DB_HOST
     DB_PORT
