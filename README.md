@@ -79,7 +79,7 @@ can also use nodemon
 
 ## DATABASE
 
-For the file metadata, aws cloud storage is used. File creation, storage and deletion is done in google cloud storage. Both are in sync i.e. if a file is created or deleted, it is reflected both in mySQL as well as in cloud storage.
+For the file metadata, aws cloud storage is used. File creation, storage and deletion is done in google cloud storage. Both are in sync i.e. if a file is created or deleted, it is reflected both in aws as well as in firebase cloud storage.
 
 ## API ENDPOINTS
 
