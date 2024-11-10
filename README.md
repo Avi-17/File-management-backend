@@ -6,6 +6,7 @@ This repo contains the source code for a file management system. This app allows
 - Prisma
 - MySQL
 - Google Cloud Storage
+- AWS Cloud Storage
 
 ## FEATURES
 
